@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  googleId        String    @unique
+  accessToken     String    @db.Text
+  refreshToken    String    @db.Text
+  tokenExpiry     DateTime?
+  watchExpiration DateTime?
+  historyId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  emails          Email[]
+}
+
+model Email {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gmailId    String   @unique
+  threadId   String
+  subject    String
+  from       String
+  to         String[]
+  body       String   @db.Text
+  snippet    String?
+  receivedAt DateTime
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  // AI fields
+  aiSummary          String?   @db.Text
+  aiCategory         String?
+  aiPriority         String?
+  aiSentiment        String?
+  aiActionItems      String[]
+  aiSuggestedReplies String[]
+  aiAnalyzedAt       DateTime?
+  
+  @@index([userId])
+  @@index([gmailId])
+}

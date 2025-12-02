@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📧 AI Email Inbox</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f7fa;
+      color: #2c3e50;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ai-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      background: #e74c3c;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+
+    .toolbar {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 10px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .filter-btn:hover {
+      background: #f8f9fa;
+    }
+
+    .filter-btn.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+
+    .filter-btn.active.category-work {
+      background: #1976d2;
+      border-color: #1976d2;
+    }
+
+    .filter-btn.active.category-personal {
+      background: #7b1fa2;
+      border-color: #7b1fa2;
+    }
+
+    .filter-btn.active.category-newsletter {
+      background: #e65100;
+      border-color: #e65100;
+    }
+
+    .filter-btn.active.category-spam {
+      background: #c62828;
+      border-color: #c62828;
+    }
+
+    .filter-btn.active.priority-high {
+      background: #c62828;
+      border-color: #c62828;
+    }
+
+    .filter-btn.active.priority-medium {
+      background: #ef6c00;
+      border-color: #ef6c00;
+    }
+
+    .filter-btn.active.priority-low {
+      background: #2e7d32;
+      border-color: #2e7d32;
+    }
+
+    .filter-divider {
+      width: 1px;
+      background: #ddd;
+      margin: 0 5px;
+    }
+
+    .email-list {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .email-item {
+      padding: 20px;
+      border-bottom: 1px solid #ecf0f1;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      gap: 15px;
+    }
+
+    .email-item:hover {
+      background: #f8f9fa;
+    }
+
+    .email-item.unread {
+      background: #e8f4ff;
+      border-left: 4px solid #3498db;
+    }
+
+    .email-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3498db;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .email-indicator.read {
+      background: transparent;
+      border: 2px solid #bdc3c7;
+    }
+
+    .email-content {
+      flex: 1;
+    }
+
+    .email-from {
+      font-weight: 600;
+      font-size: 16px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .category-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .category-work {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .category-personal {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    .category-newsletter {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .category-spam {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .priority-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .priority-high {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .priority-medium {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .priority-low {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .email-subject {
+      font-size: 15px;
+      color: #34495e;
+      margin-bottom: 5px;
+    }
+
+    .ai-summary {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+      font-style: italic;
+    }
+
+    .email-snippet {
+      font-size: 14px;
+      color: #95a5a6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .email-date {
+      font-size: 13px;
+      color: #95a5a6;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #95a5a6;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      background: white;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f8f9fa;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+      padding: 8px 16px;
+      color: #7f8c8d;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 10px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      padding: 20px 30px;
+      border-bottom: 1px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .modal-header-content {
+      flex: 1;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .modal-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #95a5a6;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+
+    .icon-btn:hover {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #95a5a6;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .close-btn:hover {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .modal-body {
+      padding: 30px;
+    }
+
+    .ai-insights {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .ai-insights h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-summary-text {
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .ai-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .ai-meta-item {
+      background: rgba(255,255,255,0.2);
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .ai-meta-label {
+      font-size: 11px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .ai-meta-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .action-items {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .action-items h4 {
+      font-size: 14px;
+      color: #856404;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-items ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .action-items li {
+      padding: 8px 0;
+      color: #856404;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .action-items li:before {
+      content: "✓";
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .suggested-replies {
+      margin-bottom: 20px;
+    }
+
+    .suggested-replies h4 {
+      font-size: 14px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reply-option {
+      background: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .reply-option:hover {
+      background: #e9ecef;
+      border-color: #3498db;
+    }
+
+    .reply-option-label {
+      font-size: 11px;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .reply-option-text {
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    .email-meta {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .email-meta-row {
+      display: flex;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .email-meta-label {
+      font-weight: 600;
+      width: 80px;
+      color: #7f8c8d;
+    }
+
+    .email-meta-value {
+      color: #2c3e50;
+      flex: 1;
+    }
+
+    .email-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #2c3e50;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .compose-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .compose-form input,
+    .compose-form textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .compose-form textarea {
+      min-height: 200px;
+      resize: vertical;
+    }
+
+    .compose-form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .auto-refresh {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #7f8c8d;
+      font-size: 13px;
+    }
+
+    .auto-refresh-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #27ae60;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+      const [emails, setEmails] = useState([]);
+      const [unreadCount, setUnreadCount] = useState(0);
+      const [loading, setLoading] = useState(true);
+      const [selectedEmail, setSelectedEmail] = useState(null);
+      const [showCompose, setShowCompose] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filter, setFilter] = useState('all');
+      const [category, setCategory] = useState('all');
+      const [priority, setPriority] = useState('all');
+      const [page, setPage] = useState(1);
+      const [totalPages, setTotalPages] = useState(1);
+      const [autoRefresh, setAutoRefresh] = useState(true);
+
+      // Fetch emails on mount and when filters change
+      useEffect(() => {
+        fetchEmails();
+      }, [searchQuery, filter, category, priority, page]);
+
+      // Auto-refresh every 10 seconds
+      useEffect(() => {
+        if (!autoRefresh) return;
+
+        const interval = setInterval(() => {
+          fetchEmails(true);
+          fetchUnreadCount();
+        }, 10000);
+
+        return () => clearInterval(interval);
+      }, [autoRefresh, searchQuery, filter, category, priority, page]);
+
+      const fetchEmails = async (silent = false) => {
+        try {
+          if (!silent) setLoading(true);
+          
+          const params = new URLSearchParams({
+            search: searchQuery,
+            filter: filter,
+            category: category,
+            priority: priority,
+            page: page.toString(),
+          });
+
+          const response = await fetch(`/api/inbox?${params}`);
+          const data = await response.json();
+          
+          setEmails(data.emails || []);
+          setTotalPages(data.totalPages || 1);
+          
+          if (!silent) setLoading(false);
+        } catch (error) {
+          console.error('Error fetching emails:', error);
+          if (!silent) setLoading(false);
+        }
+      };
+
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await fetch('/api/inbox/stats/unread');
+          const data = await response.json();
+          setUnreadCount(data.unreadCount || 0);
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+
+      useEffect(() => {
+        fetchUnreadCount();
+      }, [emails]);
+
+      const handleSearch = (value) => {
+        setSearchQuery(value);
+        setPage(1);
+      };
+
+      const handleFilter = (newFilter) => {
+        setFilter(newFilter);
+        setPage(1);
+      };
+
+      const handleCategory = (newCategory) => {
+        setCategory(newCategory);
+        setPage(1);
+      };
+
+      const handlePriority = (newPriority) => {
+        setPriority(newPriority);
+        setPage(1);
+      };
+
+      const handleEmailClick = async (email) => {
+        setSelectedEmail(email);
+
+        if (!email.isRead) {
+          try {
+            await fetch(`/api/inbox/${email.id}/read`, { method: 'POST' });
+            
+            setEmails(emails.map(e => 
+              e.id === email.id ? { ...e, isRead: true } : e
+            ));
+            setUnreadCount(Math.max(0, unreadCount - 1));
+          } catch (error) {
+            console.error('Error marking as read:', error);
+          }
+        }
+      };
+
+      const handleMarkUnread = async (emailId) => {
+        try {
+          await fetch(`/api/inbox/${emailId}/unread`, { method: 'POST' });
+          
+          setEmails(emails.map(e => 
+            e.id === emailId ? { ...e, isRead: false } : e
+          ));
+          setUnreadCount(unreadCount + 1);
+          setSelectedEmail(null);
+        } catch (error) {
+          console.error('Error marking as unread:', error);
+        }
+      };
+
+      const handleDelete = async (emailId) => {
+        if (!confirm('Are you sure you want to delete this email?')) return;
+
+        try {
+          await fetch(`/api/inbox/${emailId}`, { method: 'DELETE' });
+          
+          setEmails(emails.filter(e => e.id !== emailId));
+          setSelectedEmail(null);
+        } catch (error) {
+          console.error('Error deleting email:', error);
+        }
+      };
+
+      const handleSendEmail = async (to, subject, body) => {
+        try {
+          const response = await fetch('/api/inbox/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject, body }),
+          });
+
+          if (response.ok) {
+            alert('Email sent successfully!');
+            setShowCompose(false);
+            fetchEmails();
+          } else {
+            alert('Failed to send email');
+          }
+        } catch (error) {
+          console.error('Error sending email:', error);
+          alert('Failed to send email');
+        }
+      };
+
+      const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString();
+      };
+
+      const extractName = (from) => {
+        const match = from.match(/^([^<]+)/);
+        return match ? match[1].trim() : from;
+      };
+
+      // Calculate priority counts for badges
+      const priorityCounts = {
+        high: emails.filter(e => e.aiPriority === 'high').length,
+        medium: emails.filter(e => e.aiPriority === 'medium').length,
+        low: emails.filter(e => e.aiPriority === 'low').length,
+      };
+
+      if (loading) {
+        return (
+          <div className="container">
+            <div className="loading">
+              <h2>📥 Loading emails...</h2>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="container">
+          <div className="header">
+            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+              <h1>
+                📧 Inbox
+                <span className="ai-badge">
+                  ✨ AI Powered
+                </span>
+              </h1>
+              {unreadCount > 0 && (
+                <span className="badge">{unreadCount} unread</span>
+              )}
+            </div>
+            <div className="header-actions">
+              <div className="auto-refresh">
+                <div className="auto-refresh-indicator" />
+                Auto-refresh on
+              </div>
+              <button className="btn btn-primary" onClick={() => setShowCompose(true)}>
+                ✉️ Compose
+              </button>
+            </div>
+          </div>
+
+          <div className="toolbar">
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="🔍 Search emails..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-buttons">
+              <button
+                className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                onClick={() => handleFilter('all')}
+              >
+                All
+              </button>
+              <button
+                className={`filter-btn ${filter === 'unread' ? 'active' : ''}`}
+                onClick={() => handleFilter('unread')}
+              >
+                Unread
+              </button>
+              <button
+                className={`filter-btn ${filter === 'read' ? 'active' : ''}`}
+                onClick={() => handleFilter('read')}
+              >
+                Read
+              </button>
+              
+              <div className="filter-divider" />
+              
+              <button
+                className={`filter-btn ${category === 'all' ? 'active' : ''}`}
+                onClick={() => handleCategory('all')}
+              >
+                📁 All
+              </button>
+              <button
+                className={`filter-btn ${category === 'work' ? 'active category-work' : ''}`}
+                onClick={() => handleCategory('work')}
+              >
+                💼 Work
+              </button>
+              <button
+                className={`filter-btn ${category === 'personal' ? 'active category-personal' : ''}`}
+                onClick={() => handleCategory('personal')}
+              >
+                👤 Personal
+              </button>
+              <button
+                className={`filter-btn ${category === 'newsletter' ? 'active category-newsletter' : ''}`}
+                onClick={() => handleCategory('newsletter')}
+              >
+                📰 Newsletter
+              </button>
+              <button
+                className={`filter-btn ${category === 'spam' ? 'active category-spam' : ''}`}
+                onClick={() => handleCategory('spam')}
+              >
+                🚫 Spam
+              </button>
+
+              <div className="filter-divider" />
+              
+              <button
+                className={`filter-btn ${priority === 'all' ? 'active' : ''}`}
+                onClick={() => handlePriority('all')}
+              >
+                📊 All Priority
+              </button>
+              <button
+                className={`filter-btn ${priority === 'high' ? 'active priority-high' : ''}`}
+                onClick={() => handlePriority('high')}
+              >
+                🔥 High
+                {priority === 'all' && priorityCounts.high > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    background: '#c62828',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold'
+                  }}>
+                    {priorityCounts.high}
+                  </span>
+                )}
+              </button>
+              <button
+                className={`filter-btn ${priority === 'medium' ? 'active priority-medium' : ''}`}
+                onClick={() => handlePriority('medium')}
+              >
+                ⚡ Medium
+                {priority === 'all' && priorityCounts.medium > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    background: '#ef6c00',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold'
+                  }}>
+                    {priorityCounts.medium}
+                  </span>
+                )}
+              </button>
+              <button
+                className={`filter-btn ${priority === 'low' ? 'active priority-low' : ''}`}
+                onClick={() => handlePriority('low')}
+              >
+                ✅ Low
+                {priority === 'all' && priorityCounts.low > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    background: '#2e7d32',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    fontSize: '11px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold'
+                  }}>
+                    {priorityCounts.low}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {emails.length === 0 ? (
+            <div className="email-list">
+              <div className="empty">
+                <div className="empty-icon">📭</div>
+                <h2>No emails found</h2>
+                <p>{searchQuery ? 'Try a different search' : category !== 'all' ? `No ${category} emails` : priority !== 'all' ? `No ${priority} priority emails` : 'Your synced emails will appear here'}</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="email-list">
+                {emails.map(email => (
+                  <div
+                    key={email.id}
+                    className={`email-item ${!email.isRead ? 'unread' : ''}`}
+                    onClick={() => handleEmailClick(email)}
+                  >
+                    <div className={`email-indicator ${email.isRead ? 'read' : ''}`} />
+                    <div className="email-content">
+                      <div className="email-from">
+                        {extractName(email.from)}
+                        {email.aiCategory && (
+                          <span className={`category-badge category-${email.aiCategory}`}>
+                            {email.aiCategory}
+                          </span>
+                        )}
+                        {email.aiPriority && (
+                          <span className={`priority-badge priority-${email.aiPriority}`}>
+                            {email.aiPriority}
+                          </span>
+                        )}
+                      </div>
+                      <div className="email-subject">{email.subject}</div>
+                      {email.aiSummary && email.aiSummary !== 'Email analysis unavailable' && (
+                        <div className="ai-summary">✨ {email.aiSummary}</div>
+                      )}
+                      <div className="email-snippet">{email.snippet}</div>
+                    </div>
+                    <div className="email-date">{formatDate(email.receivedAt)}</div>
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    ← Previous
+                  </button>
+                  <span className="page-info">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {selectedEmail && (
+            <EmailModal
+              email={selectedEmail}
+              onClose={() => setSelectedEmail(null)}
+              onMarkUnread={handleMarkUnread}
+              onDelete={handleDelete}
+            />
+          )}
+
+          {showCompose && (
+            <ComposeModal
+              onClose={() => setShowCompose(false)}
+              onSend={handleSendEmail}
+            />
+          )}
+        </div>
+      );
+    }
+
+    function EmailModal({ email, onClose, onMarkUnread, onDelete }) {
+      const [showReplyPreview, setShowReplyPreview] = useState(false);
+      const [selectedReply, setSelectedReply] = useState('');
+      const [replyText, setReplyText] = useState('');
+      const [sending, setSending] = useState(false);
+
+      const hasAIAnalysis = email.aiSummary && email.aiSummary !== 'Email analysis unavailable';
+
+      const handleReplyClick = (reply) => {
+        setSelectedReply(reply);
+        setReplyText(reply);
+        setShowReplyPreview(true);
+      };
+
+      const handleSendReply = async () => {
+        if (!replyText.trim()) {
+          alert('Reply cannot be empty');
+          return;
+        }
+
+        setSending(true);
+
+        try {
+          const response = await fetch(`/api/inbox/reply/${email.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ replyText }),
+          });
+
+          if (response.ok) {
+            alert('✅ Reply sent successfully!');
+            setShowReplyPreview(false);
+            setReplyText('');
+            onClose();
+          } else {
+            alert('❌ Failed to send reply');
+          }
+        } catch (error) {
+          console.error('Error sending reply:', error);
+          alert('❌ Failed to send reply');
+        } finally {
+          setSending(false);
+        }
+      };
+
+      const handleCopyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('📋 Copied to clipboard!');
+      };
+
+      return (
+        <div className="modal" onClick={onClose}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-content">
+                <h2>{email.subject}</h2>
+                <div className="modal-badges">
+                  {email.aiCategory && (
+                    <span className={`category-badge category-${email.aiCategory}`}>
+                      {email.aiCategory}
+                    </span>
+                  )}
+                  {email.aiPriority && (
+                    <span className={`priority-badge priority-${email.aiPriority}`}>
+                      {email.aiPriority} priority
+                    </span>
+                  )}
+                  {email.aiSentiment && (
+                    <span className={`category-badge category-${email.aiSentiment === 'urgent' ? 'spam' : 'personal'}`}>
+                      {email.aiSentiment}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="icon-btn"
+                  onClick={() => onMarkUnread(email.id)}
+                  title="Mark as unread"
+                >
+                  ✉️
+                </button>
+                <button
+                  className="icon-btn"
+                  onClick={() => onDelete(email.id)}
+                  title="Delete"
+                  style={{color: '#e74c3c'}}
+                >
+                  🗑️
+                </button>
+                <button className="close-btn" onClick={onClose}>×</button>
+              </div>
+            </div>
+            <div className="modal-body">
+              {hasAIAnalysis && (
+                <>
+                  <div className="ai-insights">
+                    <h3>✨ AI Analysis</h3>
+                    <div className="ai-summary-text">{email.aiSummary}</div>
+                    <div className="ai-meta">
+                      {email.aiCategory && (
+                        <div className="ai-meta-item">
+                          <div className="ai-meta-label">Category</div>
+                          <div className="ai-meta-value">{email.aiCategory}</div>
+                        </div>
+                      )}
+                      {email.aiPriority && (
+                        <div className="ai-meta-item">
+                          <div className="ai-meta-label">Priority</div>
+                          <div className="ai-meta-value">{email.aiPriority}</div>
+                        </div>
+                      )}
+                      {email.aiSentiment && (
+                        <div className="ai-meta-item">
+                          <div className="ai-meta-label">Sentiment</div>
+                          <div className="ai-meta-value">{email.aiSentiment}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {email.aiActionItems && email.aiActionItems.length > 0 && (
+                    <div className="action-items">
+                      <h4>📋 Action Items</h4>
+                      <ul>
+                        {email.aiActionItems.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {email.aiSuggestedReplies && email.aiSuggestedReplies.length > 0 && (
+                    <div className="suggested-replies">
+                      <h4>💬 Suggested Replies</h4>
+                      {email.aiSuggestedReplies.map((reply, idx) => (
+                        <div key={idx} className="reply-option">
+                          <div className="reply-option-label">
+                            {idx === 0 ? 'Professional' : idx === 1 ? 'Casual' : 'Brief'}
+                          </div>
+                          <div className="reply-option-text">{reply}</div>
+                          <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                            <button
+                              className="btn btn-primary"
+                              style={{fontSize: '12px', padding: '6px 12px'}}
+                              onClick={() => handleReplyClick(reply)}
+                            >
+                              ↩️ Use This Reply
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              style={{fontSize: '12px', padding: '6px 12px'}}
+                              onClick={() => handleCopyToClipboard(reply)}
+                            >
+                              📋 Copy
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {showReplyPreview && (
+                <div style={{
+                  background: '#e8f5e9',
+                  border: '2px solid #4caf50',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  marginBottom: '20px'
+                }}>
+                  <h4 style={{marginBottom: '15px', color: '#2e7d32'}}>✍️ Edit Your Reply</h4>
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    style={{
+                      width: '100%',
+                      minHeight: '120px',
+                      padding: '12px',
+                      border: '1px solid #4caf50',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      marginBottom: '15px'
+                    }}
+                  />
+                  <div style={{display: 'flex', gap: '10px', justifyContent: 'flex-end'}}>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setShowReplyPreview(false);
+                        setReplyText('');
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSendReply}
+                      disabled={sending}
+                    >
+                      {sending ? 'Sending...' : '📤 Send Reply'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="email-meta">
+                <div className="email-meta-row">
+                  <div className="email-meta-label">From:</div>
+                  <div className="email-meta-value">{email.from}</div>
+                </div>
+                <div className="email-meta-row">
+                  <div className="email-meta-label">To:</div>
+                  <div className="email-meta-value">{email.to.join(', ')}</div>
+                </div>
+                <div className="email-meta-row">
+                  <div className="email-meta-label">Date:</div>
+                  <div className="email-meta-value">
+                    {new Date(email.receivedAt).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <div className="email-body">{email.body}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+function ComposeModal({ onClose, onSend }) {
+  const [to, setTo] = useState('');
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [sending, setSending] = useState(false);
+  
+  // ✅ NEW: AI generation state
+  const [showAIAssist, setShowAIAssist] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [selectedTone, setSelectedTone] = useState('professional');
+  const [generating, setGenerating] = useState(false);
+
+  // ✅ NEW: Generate email with AI
+  const handleGenerateEmail = async () => {
+    if (!aiPrompt.trim()) {
+      alert('Please enter what you want to write about');
+      return;
+    }
+
+    setGenerating(true);
+
+    try {
+      const response = await fetch('/api/ai/generate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          tone: selectedTone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.emailText) {
+        setBody(data.emailText);
+        setShowAIAssist(false);
+        setAiPrompt('');
+        alert('✨ Email generated! You can edit it before sending.');
+      } else {
+        alert('Failed to generate email. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating email:', error);
+      alert('Failed to generate email. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!to || !subject || !body) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    setSending(true);
+    await onSend(to, subject, body);
+    setSending(false);
+  };
+
+  return (
+    <div className="modal" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>✉️ Compose Email</h2>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {/* ✅ NEW: AI Assistant Panel */}
+          {showAIAssist && (
+            <div style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              padding: '20px',
+              borderRadius: '10px',
+              marginBottom: '20px',
+              color: 'white'
+            }}>
+              <h3 style={{marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                ✨ AI Email Assistant
+              </h3>
+              
+              <div style={{marginBottom: '15px'}}>
+                <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', opacity: '0.9'}}>
+                  What do you want to write about?
+                </label>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="Example: Tell the team about the project deadline extension to Friday..."
+                  style={{
+                    width: '100%',
+                    minHeight: '80px',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    color: '#2c3e50'
+                  }}
+                />
+              </div>
+
+              <div style={{marginBottom: '15px'}}>
+                <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', opacity: '0.9'}}>
+                  Choose tone:
+                </label>
+                <div style={{display: 'flex', gap: '10px'}}>
+                  <button
+                    onClick={() => setSelectedTone('professional')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: selectedTone === 'professional' ? '2px solid white' : '2px solid rgba(255,255,255,0.3)',
+                      background: selectedTone === 'professional' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: selectedTone === 'professional' ? 'bold' : 'normal'
+                    }}
+                  >
+                    💼 Professional
+                  </button>
+                  <button
+                    onClick={() => setSelectedTone('casual')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: selectedTone === 'casual' ? '2px solid white' : '2px solid rgba(255,255,255,0.3)',
+                      background: selectedTone === 'casual' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: selectedTone === 'casual' ? 'bold' : 'normal'
+                    }}
+                  >
+                    😊 Casual
+                  </button>
+                  <button
+                    onClick={() => setSelectedTone('brief')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: selectedTone === 'brief' ? '2px solid white' : '2px solid rgba(255,255,255,0.3)',
+                      background: selectedTone === 'brief' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: selectedTone === 'brief' ? 'bold' : 'normal'
+                    }}
+                  >
+                    ⚡ Brief
+                  </button>
+                </div>
+              </div>
+
+              <div style={{display: 'flex', gap: '10px'}}>
+                <button
+                  onClick={() => {
+                    setShowAIAssist(false);
+                    setAiPrompt('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '6px',
+                    border: '2px solid white',
+                    background: 'transparent',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGenerateEmail}
+                  disabled={generating || !aiPrompt.trim()}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'white',
+                    color: '#667eea',
+                    cursor: generating || !aiPrompt.trim() ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    opacity: generating || !aiPrompt.trim() ? 0.6 : 1
+                  }}
+                >
+                  {generating ? '✨ Generating...' : '✨ Generate Email'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <form className="compose-form" onSubmit={handleSubmit}>
+            <input
+              type="email"
+              placeholder="To: recipient@example.com"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              required
+            />
+            
+            {/* ✅ NEW: AI Assist button above textarea */}
+            {!showAIAssist && (
+              <button
+                type="button"
+                onClick={() => setShowAIAssist(true)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginBottom: '10px'
+                }}
+              >
+                ✨ Write with AI
+              </button>
+            )}
+
+            <textarea
+              placeholder="Compose your message..."
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              required
+            />
+            <div className="compose-form-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={sending}
+              >
+                {sending ? 'Sending...' : '📤 Send'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
